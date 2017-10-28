@@ -38,8 +38,8 @@
 (s/def ::log-level-tag #(int? (level->int %)))
 (s/def ::log-level (s/or :level-tag ::log-level-tag
                          :level-int (s/and int?
-                                           (complement neg?)
-                                           #(<  % (count (keys level->int))))))
+                                           pos?
+                                           #(<= % (count (keys level->int))))))
 (s/def ::default-file string?)
 (s/def ::out-file (s/or :no-file #{:stdout :log-file}
                         :file (s/and string? u/is-writable?)))
