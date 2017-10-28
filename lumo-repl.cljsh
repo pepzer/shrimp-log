@@ -1,0 +1,14 @@
+#!/bin/bash
+
+":"; exec lumo --socket-repl 12345 -D org.clojars.pepzer/redlobster:0.2.2,shrimp:0.1.1-SNAPSHOT -c src/cljs:src/cljc:test/cljs -K -i "$0" -r
+
+(ns cljs.user
+ (:require [shrimp-log.core :as l :refer [trace* debug* info* warn* error* spy*]]
+           [shrimp-log.utils :as u])
+ (:use-macros [shrimp-log.macros :only [trace debug info warn error spy]]))
+
+(println "\nNamespace loaded with:\n
+(ns cljs.user
+ (:require [shrimp-log.core :as l :refer [trace* debug* info* warn* error* spy*]]
+           [shrimp-log.utils :as u])
+ (:use-macros [shrimp-log.macros :only [trace debug info warn error spy]]))\n")
