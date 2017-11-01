@@ -49,6 +49,7 @@
 (s/def ::buffer-size (s/and int? pos?))
 (s/def ::throw-on-err? boolean?)
 (s/def ::pretty-print? boolean?)
+(s/def ::verbose? boolean?)
 (s/def ::log-chan #(instance? sc/Chan %))
 
 (s/def ::log-opts (s/keys :req [::buffer-size
@@ -58,7 +59,8 @@
                                 ::log-delay
                                 ::tstamp-format
                                 ::throw-on-err?
-                                ::pretty-print?]
+                                ::pretty-print?
+                                ::verbose?]
                           :opt [::log-chan]))
 
 (defn- default-file []
@@ -240,6 +242,7 @@
   useful to lower the rate of printed messages.
   "
   [chan]
+  (sc/try-realise init-prom true)
   (let-realised [bundle (sc/take! chan)]
     (if @bundle
       (do
@@ -267,7 +270,8 @@
                             ::tstamp-format :iso
                             ::buffer-size buffer-size
                             ::throw-on-err? false
-                            ::pretty-print? true}
+                            ::pretty-print? true
+                            ::verbose? false}
             conf-file (u/read-config conf-filename)]
         (if conf-file
           (when-realised [conf-file]
@@ -277,7 +281,8 @@
                           tstamp-format
                           buffer-size
                           throw-on-err?
-                          pretty-print?]} @conf-file
+                          pretty-print?
+                          verbose?]} @conf-file
                   new-config (cond-> default-config
                                log-level (assoc ::log-level (or (and (int? log-level) log-level)
                                                                 (level->int log-level)))
@@ -286,7 +291,8 @@
                                tstamp-format (assoc ::tstamp-format tstamp-format)
                                buffer-size (assoc ::buffer-size buffer-size)
                                throw-on-err? (assoc ::throw-on-err? throw-on-err?)
-                               pretty-print? (assoc ::pretty-print? pretty-print?))]
+                               pretty-print? (assoc ::pretty-print? pretty-print?)
+                               verbose? (assoc ::verbose? verbose?))]
               (if (s/valid? ::log-opts new-config)
                 (reset! log-state (assoc new-config ::log-chan
                                          (sc/chan (::buffer-size new-config) nil 0)))
@@ -294,15 +300,15 @@
                   (s/explain ::log-opts new-config)
                   (reset! log-state (assoc default-config ::log-chan
                                            (sc/chan (::buffer-size default-config) nil 0)))))
-              (trace* (namespace ::-) "Initializing logger...")
-              (defer 1 (log-loop (::log-chan @log-state)))
-              (p/realise init-prom true)))
+              (when (::verbose? @log-state)
+                (trace* (namespace ::-) "Initializing logger..."))
+              (defer 1 (log-loop (::log-chan @log-state)))))
 
           (let [log-chan (sc/chan buffer-size nil 0)]
             (reset! log-state (assoc default-config ::log-chan log-chan))
-            (trace* (namespace ::-) "Initializing logger...")
-            (defer 1 (log-loop log-chan))
-            (p/realise init-prom true)))))))
+            (when (::verbose? default-config)
+              (trace* (namespace ::-) "Initializing logger..."))
+            (defer 1 (log-loop log-chan))))))))
 
 ;; Initialize the logger while loading the namespace.
 (init-logger)

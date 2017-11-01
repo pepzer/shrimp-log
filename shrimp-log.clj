@@ -11,6 +11,7 @@
 ;;                 :locale-time; default :iso.
 ;; :throw-on-err?, if true throw an error after the :error log; default false.
 ;; :pretty-print?, if true pretty print the value of spy; default true.
+;; :verbose?, if true print logs on events (e.g. during init); default false.
 
 {:buffer-size 1024
  :log-level :trace
@@ -18,4 +19,5 @@
  :log-delay 10
  :tstamp-format :iso
  :throw-on-err? false
- :pretty-print? true}
+ :pretty-print? true
+ :verbose? false}

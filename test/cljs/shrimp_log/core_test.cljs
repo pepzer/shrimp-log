@@ -65,13 +65,16 @@
                              (with-out-str
                                (pp/pprint v)))))
         expected-vals [[:trace curr-ns (spy-pr foo-map2)]
-                       [:debug curr-ns (spy-pr foo-map2)]]]
+                       [:debug curr-ns (spy-pr foo-map2)]
+                       [:warn curr-ns (spy-pr foo-map2)]]]
     (swap! l/log-state assoc chan-kw test-ch)
     (l/spy* :foo ::- :foo)
     (is (= (l/spy* :trace ::- (assoc foo-map :new-sym 'sym))
            foo-map2) "spy trace")
     (is (= (l/spy* :debug ::- (assoc foo-map :new-sym 'sym))
            foo-map2) "spy debug")
+    (is (= (l/spy* :warn ::- (assoc foo-map :new-sym 'sym))
+           foo-map2) "spy warn")
     (defer-loop [prom (sc/take! test-ch) [x & xs] expected-vals]
       (if x
         (when-realised [prom]
